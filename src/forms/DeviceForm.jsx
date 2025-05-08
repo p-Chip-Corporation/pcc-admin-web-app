@@ -1,0 +1,91 @@
+import React from "react";
+import {
+  Box,
+  Button,
+  TextField,
+  Switch,
+  FormControlLabel,
+  Alert,
+} from "@mui/material";
+import { useFormik } from "formik";
+import * as Yup from "yup";
+import { createDevice, updateDevice } from "../services/deviceService";
+
+const validationSchema = Yup.object({
+  name: Yup.string().required("Name is required"),
+  isActive: Yup.boolean(),
+});
+
+export default function DeviceForm({ initialValues = {}, onSuccess }) {
+  const isEdit = Boolean(initialValues?.id);
+
+  const formik = useFormik({
+    initialValues: {
+      id: initialValues.id || "",
+      name: initialValues.name || "",
+      isActive: initialValues.isActive ?? true,
+    },
+    validationSchema,
+    enableReinitialize: true,
+    onSubmit: async (values, { setStatus, setSubmitting }) => {
+      try {
+        if (isEdit) {
+          await updateDevice(values);
+        } else {
+          await createDevice(values);
+        }
+        await onSuccess();
+      } catch (error) {
+        setStatus(error?.response?.data?.error || "Failed to save user.");
+      } finally {
+        setSubmitting(false);
+      }
+    },
+  });
+
+  return (
+    <form onSubmit={formik.handleSubmit}>
+      <Box display="flex" flexDirection="column" gap={2}>
+        <TextField
+          name="name"
+          label="Name"
+          value={formik.values.name}
+          onChange={formik.handleChange}
+          error={formik.touched.name && Boolean(formik.errors.name)}
+          helperText={formik.touched.name && formik.errors.name}
+          fullWidth
+        />
+
+        <FormControlLabel
+          control={
+            <Switch
+              name="isActive"
+              checked={formik.values.isActive}
+              onChange={formik.handleChange}
+            />
+          }
+          label="Active"
+        />
+
+        {formik.values.isActive === false && (
+          <Alert severity="warning">
+            {isEdit
+              ? "Deactivating this device will restrict all accounts from from using this device."
+              : "This device cannot be used by any account until it has been registered."}
+          </Alert>
+        )}
+
+        {formik.status && <Alert severity="error">{formik.status}</Alert>}
+
+        <Button
+          type="submit"
+          variant="contained"
+          color="primary"
+          disabled={formik.isSubmitting || !formik.dirty || !formik.isValid}
+        >
+          {isEdit ? "Update Device" : "Add Device"}
+        </Button>
+      </Box>
+    </form>
+  );
+}
