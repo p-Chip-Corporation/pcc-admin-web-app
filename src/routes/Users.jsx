@@ -1,37 +1,68 @@
-import {
-  Box,
-  CircularProgress,
-  Container,
-  IconButton,
-  Paper,
-} from "@mui/material";
-import PageHeader from "../components/PageHeader";
-import PaginatedTableComponent from "../components/PaginatedTableComponent";
-import InfoPopperComponent from "../components/InfoPopperComponent";
-import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
+import { Divider, Paper } from "@mui/material";
 import { useEffect, useState } from "react";
 import RightDrawer from "../components/RightDrawerComponent";
 import UserForm from "../forms/UserForm";
 import { fetchUsers } from "../services/userService";
-import PeopleIcon from "@mui/icons-material/People";
-import { useNavigate } from "react-router";
+import { useNavigate, useSearchParams } from "react-router";
+import FlexComponent from "../components/containers/FlexComponent";
+import PageHeader from "../components/layout/PageHeader";
+import { Add, FilterList, Person } from "@mui/icons-material";
+import FilterButton from "../components/FilterButtonComponent";
+import BulkActionsMenuButton from "../components/ui/BulkActionButton";
+import SquareButton from "../components/ui/SmallButton";
+import LoadingSpinner from "../components/layout/LoadingSpinner";
+import FilterComponent from "../components/FilterComponent";
+import DynamicTable from "../components/ui/tables/DynamicTable";
 
 const Users = () => {
   const [open, setOpen] = useState();
+  const [drawerView, setDrawerView] = useState({
+    mode: "",
+    title: "",
+  });
+
   const [loading, setLoading] = useState(true);
   const [users, setUsers] = useState([]);
+  const [selectedUsers, setSelectedUsers] = useState([]);
+
+  const [meta, setMeta] = useState({});
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+
+  const limit = parseInt(searchParams.get("limit") || "25", 10);
+  const page = parseInt(searchParams.get("page") || "1", 10);
+  const orderBy = searchParams.get("orderBy") || "createdAt";
+  const order = searchParams.get("order") || "asc";
+
+  // Flattened filters
+  const filters = {
+    createdBy: searchParams.get("createdBy") || undefined,
+    createdAt_gte: searchParams.get("createdAt_gte") || undefined,
+    createdAt_lte: searchParams.get("createdAt_lte") || undefined,
+    isActive: searchParams.get("isActive") || undefined,
+  };
+
+  // Flattened search
+  const query = searchParams.get("query") || undefined;
 
   useEffect(() => {
     getUsers();
-  }, []);
+  }, [limit, page, orderBy, order, searchParams.toString()]);
 
   const getUsers = async () => {
     try {
       setLoading(true);
-      const response = await fetchUsers();
+      const response = await fetchUsers({
+        page,
+        limit,
+        orderBy,
+        order,
+        query,
+        ...filters,
+      });
       if (response.success) {
         setUsers(response.data);
+        setMeta(response.meta);
       }
     } catch (error) {
       console.log("Error", error);
@@ -40,80 +71,71 @@ const Users = () => {
     }
   };
 
-  if (loading) {
-    return (
-      <Box
-        sx={{
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
-          width: "100vw",
-          height: "100vh",
-        }}
-      >
-        <CircularProgress />
-      </Box>
-    );
-  }
-
   return (
-    <Container
-      maxWidth="xl"
-      sx={{
-        display: "flex",
-        flexDirection: "column",
-        flex: 1,
-        flexGrow: 1,
-        height: "100%",
-        width: "100%",
-        overflow: "auto",
-      }}
-    >
-      <Box
-        sx={{
-          display: "flex",
-          flexDirection: "column",
-          flex: 1,
-          width: "100%",
-          height: "100%",
-          padding: 1,
-          gap: 2,
-        }}
-      >
-        <PageHeader icon={<PeopleIcon fontSize="large" />} title={"Users"}>
-          <Box sx={{ display: "flex", flexDirection: "row", gap: "1" }}>
-            <InfoPopperComponent title="How to use this section">
-              You can manage internal p-Chip user here. Users will have access
-              to the p-Chip web portal. After create a user you will need to
-              update user permissions. By default, all users will be created
-              with read only permissions. Make sure to click{" "}
-              <strong>“Save”</strong> after making changes.
-            </InfoPopperComponent>
+    <FlexComponent component={Paper}>
+      <PageHeader icon={<Person fontSize="large" />} title="USERS">
+        <FilterButton
+          onClick={() => {
+            setDrawerView({
+              mode: "filter",
+              title: "Filter Users",
+            });
+            setOpen(true);
+          }}
+        >
+          <FilterList fontSize="small" />
+        </FilterButton>
 
-            <IconButton
-              onClick={() => {
-                setOpen(true);
-              }}
-            >
-              <AddCircleOutlineIcon />
-            </IconButton>
-          </Box>
-        </PageHeader>
-        <PaginatedTableComponent
+        {selectedUsers.length > 0 ? (
+          <BulkActionsMenuButton
+            selected={selectedUsers}
+            actions={[
+              {
+                label: "Activate",
+                onClick: (items) => console.log("Disable", items),
+              },
+              {
+                label: "Deactivate",
+                onClick: (items) => console.log("Disable", items),
+              },
+            ]}
+          />
+        ) : (
+          <SquareButton
+            variant="contained"
+            onClick={() => {
+              setDrawerView({
+                mode: "add",
+                title: "Create a new user",
+              });
+              setOpen(true);
+            }}
+          >
+            <Add fontSize="small" />
+          </SquareButton>
+        )}
+      </PageHeader>
+      <Divider orientation="horizontal" flexItem variant="fullWidth" />
+      {loading ? (
+        <LoadingSpinner title={"Loading Users"} />
+      ) : (
+        <DynamicTable
           onRowClick={(row) => {
             navigate(`/users/${row.id}`);
           }}
+          selected={selectedUsers}
+          onSelectChange={setSelectedUsers}
+          meta={meta}
           data={users}
           columns={[
             { id: "id", label: "ID", type: "string", grow: false },
             { id: "name", label: "Name", type: "string", grow: true },
             { id: "email", label: "Email", type: "string", grow: false },
-            { id: "role", label: "Role", type: "string", grow: false },
+            { id: "roleLabel", label: "Role", type: "string", grow: false },
             { id: "isActive", label: "Status", type: "boolean", grow: false },
           ]}
         />
-      </Box>
+      )}
       <RightDrawer
         open={open}
         onClose={() => {
@@ -121,21 +143,30 @@ const Users = () => {
         }}
         title={"Create a new user"}
       >
-        <UserForm
-          onSuccess={async () => {
-            setLoading(true);
-            try {
+        {drawerView.mode === "add" && (
+          <UserForm
+            onSuccess={async () => {
+              setLoading(true);
+              try {
+                setOpen(false);
+                await getUsers();
+              } catch (error) {
+                console.log("Error", error);
+              } finally {
+                setLoading(false);
+              }
+            }}
+          />
+        )}
+        {drawerView.mode === "filter" && (
+          <FilterComponent
+            onApply={() => {
               setOpen(false);
-              await getUsers();
-            } catch (error) {
-              console.log("Error", error);
-            } finally {
-              setLoading(false);
-            }
-          }}
-        />
+            }}
+          />
+        )}
       </RightDrawer>
-    </Container>
+    </FlexComponent>
   );
 };
 

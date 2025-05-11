@@ -1,4 +1,3 @@
-import React, { useState } from "react";
 import {
   Table,
   TableBody,
@@ -7,6 +6,7 @@ import {
   TableHead,
   TableRow,
   TablePagination,
+  TableSortLabel,
   Paper,
   Box,
   Typography,
@@ -18,26 +18,23 @@ import {
 export default function ResponsivePaginatedTableComponent({
   columns,
   data,
+  meta,
+  onPageChange,
+  onRowsPerPageChange,
+  onSort,
+  order = "asc",
+  orderBy = "",
   rowKey = "id",
-  rowsPerPageOptions = [5, 10, 25],
-  onRowClick, // ✅ add this
+  rowsPerPageOptions = [25, 50, 100],
+  onRowClick,
 }) {
-  const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(rowsPerPageOptions[0]);
-
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
-  const handleChangePage = (_, newPage) => setPage(newPage);
-  const handleChangeRowsPerPage = (event) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0);
+  const handleSort = (colId) => {
+    const isAsc = orderBy === colId && order === "asc";
+    onSort?.(colId, isAsc ? "desc" : "asc");
   };
-
-  const paginatedData = data.slice(
-    page * rowsPerPage,
-    page * rowsPerPage + rowsPerPage
-  );
 
   return (
     <Paper
@@ -53,7 +50,7 @@ export default function ResponsivePaginatedTableComponent({
     >
       <Box sx={{ flex: 1, overflow: "auto", p: isMobile ? 2 : 0 }}>
         {isMobile ? (
-          paginatedData.map((row, i) => (
+          data.map((row, i) => (
             <Box
               key={row[rowKey] || i}
               sx={{
@@ -114,14 +111,21 @@ export default function ResponsivePaginatedTableComponent({
                         whiteSpace: col.grow ? "normal" : "nowrap",
                         width: col.grow ? "auto" : "1%",
                       }}
+                      sortDirection={orderBy === col.id ? order : false}
                     >
-                      {col.label}
+                      <TableSortLabel
+                        active={orderBy === col.id}
+                        direction={orderBy === col.id ? order : "asc"}
+                        onClick={() => handleSort(col.id)}
+                      >
+                        {col.label}
+                      </TableSortLabel>
                     </TableCell>
                   ))}
                 </TableRow>
               </TableHead>
               <TableBody>
-                {paginatedData.map((row, i) => (
+                {data.map((row, i) => (
                   <TableRow
                     key={row[rowKey] || i}
                     hover
@@ -129,7 +133,7 @@ export default function ResponsivePaginatedTableComponent({
                       transition: "background-color 0.2s",
                       cursor: onRowClick ? "pointer" : "default",
                     }}
-                    onClick={() => onRowClick?.(row)} // ✅ invoke handler if provided
+                    onClick={() => onRowClick?.(row)}
                   >
                     {columns.map((col) => (
                       <TableCell
@@ -170,12 +174,18 @@ export default function ResponsivePaginatedTableComponent({
       <Box sx={{ flexShrink: 0 }}>
         <TablePagination
           component="div"
-          count={data.length}
-          page={page}
-          onPageChange={handleChangePage}
-          rowsPerPage={rowsPerPage}
+          count={meta?.total || 0}
+          disabled={meta?.total <= Math.min(...rowsPerPageOptions)}
+          page={(meta?.page || 1) - 1}
+          onPageChange={(_, newPage) => {
+            onPageChange?.(newPage + 1);
+          }}
+          rowsPerPage={meta?.limit || rowsPerPageOptions[0]}
+          onRowsPerPageChange={(e) => {
+            const newLimit = parseInt(e.target.value, 10);
+            onRowsPerPageChange?.(newLimit);
+          }}
           rowsPerPageOptions={rowsPerPageOptions}
-          onRowsPerPageChange={handleChangeRowsPerPage}
         />
       </Box>
     </Paper>

@@ -52,18 +52,39 @@ export const updateDevice = async (device) => {
   }
 };
 
-export const fetchDevices = async (userId) => {
+export const fetchDevices = async (
+  {
+    page = 1,
+    limit = 25,
+    orderBy = "createdAt",
+    order = "asc",
+    query,
+    createdBy,
+    createdAt_gte,
+    createdAt_lte,
+    isActive,
+  } = {}
+) => {
   try {
     const response = await api.get(`/api/devices`, {
       params: {
-        ...(userId && { userId }),
+        page,
+        limit,
+        orderBy,
+        order,
+        ...(query && { query }),
+        ...(createdBy && { createdBy }),
+        ...(createdAt_gte && { createdAt_gte }),
+        ...(createdAt_lte && { createdAt_lte }),
+        ...(isActive !== undefined && { isActive }),
       },
     });
 
     if (response.status === 200 || response.status === 201) {
       return {
         success: true,
-        data: response.data, // Include the response data (e.g., user profile)
+        data: response.data.results, // assuming you renamed it from 'results' earlier
+        meta: response.data.meta,
       };
     }
 

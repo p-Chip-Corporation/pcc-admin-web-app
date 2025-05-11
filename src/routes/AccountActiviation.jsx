@@ -1,35 +1,68 @@
-import {
-  Box,
-  CircularProgress,
-  Container,
-  IconButton,
-  Paper,
-} from "@mui/material";
-import PageHeader from "../components/PageHeader";
-import PaginatedTableComponent from "../components/PaginatedTableComponent";
-import InfoPopperComponent from "../components/InfoPopperComponent";
-import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
+import { Paper } from "@mui/material";
 import { useEffect, useState } from "react";
 import RightDrawer from "../components/RightDrawerComponent";
-import AccountActivationForm from "../forms/AccountActiviationForm";
 import { fetchAccountActivations } from "../services/accountActivationService";
 import MailOutlineIcon from "@mui/icons-material/MailOutline";
+import { useNavigate, useSearchParams } from "react-router";
+import FlexComponent from "../components/containers/FlexComponent";
+import FilterButton from "../components/FilterButtonComponent";
+import { Add, FilterList } from "@mui/icons-material";
+import SquareButton from "../components/ui/SmallButton";
+import PageHeader from "../components/layout/PageHeader";
+import LoadingSpinner from "../components/layout/LoadingSpinner";
+import DynamicTable from "../components/ui/tables/DynamicTable";
+import FilterComponent from "../components/FilterComponent";
 
 const AccountActivation = () => {
   const [open, setOpen] = useState();
+  const [drawerView, setDrawerView] = useState({
+    mode: "",
+    title: "",
+  });
+
   const [loading, setLoading] = useState(true);
   const [accountActivations, setAccountActivations] = useState([]);
+  const [selectedAccountActivations, setSelectedAccountActivations] = useState(
+    []
+  );
+
+  const [meta, setMeta] = useState({});
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+
+  const limit = parseInt(searchParams.get("limit") || "25", 10);
+  const page = parseInt(searchParams.get("page") || "1", 10);
+  const orderBy = searchParams.get("orderBy") || "createdAt";
+  const order = searchParams.get("order") || "asc";
+
+  const filters = {
+    createdBy: searchParams.get("createdBy") || undefined,
+    createdAt_gte: searchParams.get("createdAt_gte") || undefined,
+    createdAt_lte: searchParams.get("createdAt_lte") || undefined,
+    isActive: searchParams.get("isActive") || undefined,
+    accountId: searchParams.get("accountId") || undefined,
+  };
+
+  const query = searchParams.get("query") || undefined;
 
   useEffect(() => {
     getAccountActivations();
-  }, []);
+  }, [limit, page, orderBy, order, searchParams.toString()]);
 
   const getAccountActivations = async () => {
     try {
       setLoading(true);
-      const response = await fetchAccountActivations();
+      const response = await fetchAccountActivations({
+        page,
+        limit,
+        orderBy,
+        order,
+        query,
+        ...filters,
+      });
       if (response.success) {
         setAccountActivations(response.data);
+        setMeta(response.meta);
       }
     } catch (error) {
       console.log("Error", error);
@@ -38,91 +71,89 @@ const AccountActivation = () => {
     }
   };
 
-  if (loading) {
-    return (
-      <Box
-        sx={{
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
-          width: "100vw",
-          height: "100vh",
-        }}
-      >
-        <CircularProgress />
-      </Box>
-    );
-  }
-
   return (
-    <Container
-      maxWidth="xl"
-      sx={{
-        display: "flex",
-        flexDirection: "column",
-        flex: 1,
-        width: "100%",
-        height: "100%",
-      }}
-    >
-      <Box
-        sx={{
-          display: "flex",
-          flexDirection: "column",
-          flex: 1,
-          width: "100%",
-          height: "100%",
-          padding: 1,
-          gap: 2,
-        }}
+    <FlexComponent component={Paper}>
+      <PageHeader
+        icon={<MailOutlineIcon fontSize="large" />}
+        title="ACCOUNT INVITATIONS"
       >
-        <PageHeader icon={<MailOutlineIcon fontSize="large" />}  title={"Account Invitations"}>
-          <Box sx={{ display: "flex", flexDirection: "row", gap: "1" }}>
-            <InfoPopperComponent title="How to use this section">
-              Here you can manage account invitations that will be sent to the
-              email you sepcify. Only one account invitation can be sent at a
-              time. The user you specify will be set as the account
-              administrator on successful authentication. Make sure to click{" "}
-              <strong>“Save”</strong> after making changes.
-            </InfoPopperComponent>
+        <FilterButton
+          onClick={() => {
+            setDrawerView({
+              mode: "filter",
+              title: "Filter Account Devices",
+            });
+            setOpen(true);
+          }}
+        >
+          <FilterList fontSize="small" />
+        </FilterButton>
 
-            <IconButton
-              onClick={() => {
-                setOpen(true);
-              }}
-            >
-              <AddCircleOutlineIcon />
-            </IconButton>
-          </Box>
-        </PageHeader>
-        <PaginatedTableComponent
-        onRowClick={() => {
-          
-        }}
+        {selectedAccountActivations.length > 0 ? (
+          <BulkActionsMenuButton
+            selected={selectedAccountActivations}
+            actions={[
+              {
+                label: "Activate",
+                onClick: (items) => console.log("Disable", items),
+              },
+              {
+                label: "Deactivate",
+                onClick: (items) => console.log("Disable", items),
+              },
+            ]}
+          />
+        ) : (
+          <SquareButton
+            variant="contained"
+            onClick={() => {
+              setDrawerView({
+                mode: "add",
+                title: "Register a Device with an Account",
+              });
+              setOpen(true);
+            }}
+          >
+            <Add fontSize="small" />
+          </SquareButton>
+        )}
+      </PageHeader>
+
+      {loading ? (
+        <LoadingSpinner title={"Loading Account Activations"} />
+      ) : (
+        <DynamicTable
+          onRowClick={(row) => {
+            navigate(`/account-activation/${row.id}`);
+          }}
+          selected={selectedAccountActivations}
+          onSelectChange={setSelectedAccountActivations}
+          meta={meta}
           data={accountActivations}
           columns={[
             { id: "id", label: "ID", grow: false },
             { id: "accountName", label: "Account Name", grow: true },
             { id: "email", label: "Email Address", grow: false },
-            { id: "issueDate", label: "Issue Date", grow: false },
-            { id: "expiryDate", label: "Expiry Date", grow: false },
-            { id: "isClaimed", label: "Claimed", grow: false, type: "boolean" },
-            { id: "claimedDate", label: "Claimed Date", grow: false },
+            {
+              id: "isClaimed",
+              label: "Claimed",
+              grow: false,
+              type: "boolean",
+            },
             { id: "createdBy", label: "Created By", grow: false },
             { id: "createdAt", label: "Created Date", grow: false },
           ]}
         />
-      </Box>
+      )}
       <RightDrawer
         open={open}
         onClose={() => {
           setOpen(false);
         }}
-        title={"Issue An Account Invitation"}
+        title={drawerView.title}
       >
-        {open && (
-          <AccountActivationForm
+        {drawerView.mode === "add" && (
+          <AccountDeviceForm
             onSuccess={async () => {
               setLoading(true);
               try {
@@ -136,8 +167,15 @@ const AccountActivation = () => {
             }}
           />
         )}
+        {drawerView.mode === "filter" && (
+          <FilterComponent
+            onApply={() => {
+              setOpen(false);
+            }}
+          />
+        )}
       </RightDrawer>
-    </Container>
+    </FlexComponent>
   );
 };
 

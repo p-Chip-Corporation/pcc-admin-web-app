@@ -14,7 +14,7 @@ import {
   useTheme,
   Divider,
 } from "@mui/material";
-import RightDrawer from "./RightDrawerComponent";
+import RightDrawer from "../../RightDrawerComponent";
 
 export default function PreviewTableComponent({
   columns,

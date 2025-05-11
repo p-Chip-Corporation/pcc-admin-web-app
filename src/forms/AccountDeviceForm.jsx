@@ -31,11 +31,11 @@ export default function AccountDeviceForm({ onSuccess }) {
   useEffect(() => {
     async function loadFormOptions() {
       try {
-        const accountRequest = await fetchAccounts();
+        const accountRequest = await fetchAccounts(undefined, true);
         if (accountRequest.success) {
           setAccounts(accountRequest.data);
         }
-        const deviceRequest = await fetchDevices();
+        const deviceRequest = await fetchDevices(undefined, true, true);
         if (deviceRequest.success) {
           setDevices(deviceRequest.data);
         }

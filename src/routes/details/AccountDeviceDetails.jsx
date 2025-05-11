@@ -7,33 +7,31 @@ import {
   Typography,
 } from "@mui/material";
 import { useEffect, useState } from "react";
-import { createSearchParams, useNavigate, useParams } from "react-router";
-import { fetchAccountDetails } from "../../services/accountService";
+import { useParams } from "react-router";
 import PageHeader from "../../components/layout/DetailPageHeader";
 import { Tabs, Tab } from "@mui/material";
-import { fetchAccountActivations } from "../../services/accountActivationService";
-import { fetchAccountDevices } from "../../services/accountDeviceService";
-import PreviewTableComponent from "../../components/ui/tables/PreviewTableComponent";
-import AccountForm from "../../forms/AccountForm";
+import { fetchAccountDeviceDetails } from "../../services/accountDeviceService";
 import RightDrawer from "../../components/RightDrawerComponent";
 import FlexComponent from "../../components/containers/FlexComponent";
 import FlexFieldWithLabel from "../../components/containers/FlexFieldWithLabel";
 import FlexLayout from "../../components/layout/FlexLayout";
+import AccountDeviceForm from "../../forms/AccountDeviceForm";
+import { fetchAccountDetails } from "../../services/accountService";
+import { fetchDeviceById } from "../../services/deviceService";
 
-const AccountDetails = () => {
+const AccountDeviceDetails = () => {
   const { id } = useParams();
-  const navigate = useNavigate();
 
   const [open, setOpen] = useState();
   const [loading, setLoading] = useState(true);
-  const [accountDetails, setAccountDetails] = useState({});
-  const [accountActivationRequests, setAccountActivationRequests] = useState({
+  const [accountDeviceDetails, setAccountDeviceDetails] = useState({});
+  const [accountDetails, setAccountDetails] = useState({
     loaded: false,
-    data: [],
+    data: {},
   });
-  const [accountDevices, setAccountDevices] = useState({
+  const [deviceDetails, setDeviceDetails] = useState({
     loaded: false,
-    data: [],
+    data: {},
   });
   const [loadingTabContent, setLoadingTabContent] = useState(true);
   const [accountAction, setAccountAction] = useState({
@@ -45,30 +43,16 @@ const AccountDetails = () => {
   const handleTabChange = (event, newValue) => setTabIndex(newValue);
 
   useEffect(() => {
-    getAccountDetails();
+    getAccountDeviceDetails();
   }, []);
 
-  useEffect(() => {
-    if (!accountDetails) {
-      return;
-    }
-
-    if (tabIndex === 0 && !accountActivationRequests.loaded) {
-      getAccountActivations();
-    }
-
-    if (tabIndex === 1 && !accountDevices.loaded) {
-      getAccountDevices();
-    }
-  }, [tabIndex, accountDetails]);
-
-  const getAccountDetails = async () => {
+  const getAccountDeviceDetails = async () => {
     try {
       setLoading(true);
 
-      const request = await fetchAccountDetails({ id: id });
+      const request = await fetchAccountDeviceDetails({ id: id });
       if (request.success) {
-        setAccountDetails(request.data);
+        setAccountDeviceDetails(request.data);
         setTabIndex(0);
       }
     } catch (error) {
@@ -78,18 +62,29 @@ const AccountDetails = () => {
     }
   };
 
-  const getAccountActivations = async () => {
-    if (!accountDetails.id) {
+  useEffect(() => {
+    if (!accountDeviceDetails) {
       return;
     }
 
+    if (tabIndex === 0 && !accountDetails.loaded) {
+      getAccountDetails();
+    }
+
+    if (tabIndex === 1 && !deviceDetails.loaded) {
+      getDeviceDetails();
+    }
+  }, [tabIndex, accountDeviceDetails]);
+
+  const getAccountDetails = async () => {
     try {
       setLoadingTabContent(true);
-      const request = await fetchAccountActivations({
-        accountId: accountDetails.id,
+
+      const request = await fetchAccountDetails({
+        id: accountDeviceDetails.accountId,
       });
       if (request.success) {
-        setAccountActivationRequests({ loaded: true, data: request.data });
+        setAccountDetails({ loaded: true, data: request.data });
       }
     } catch (error) {
       console.log("Error", error);
@@ -98,18 +93,15 @@ const AccountDetails = () => {
     }
   };
 
-  const getAccountDevices = async () => {
-    if (!accountDetails) {
-      return;
-    }
-
+  const getDeviceDetails = async () => {
     try {
       setLoadingTabContent(true);
-      const request = await fetchAccountDevices({
-        accountId: accountDetails.id,
+
+      const request = await fetchDeviceById({
+        id: accountDeviceDetails.deviceId,
       });
       if (request.success) {
-        setAccountDevices({ loaded: true, data: request.data });
+        setDeviceDetails({ loaded: true, data: request.data });
       }
     } catch (error) {
       console.log("Error", error);
@@ -117,8 +109,6 @@ const AccountDetails = () => {
       setLoadingTabContent(false);
     }
   };
-
-  console.log("account devices", accountDevices);
 
   if (loading) {
     return (
@@ -141,9 +131,8 @@ const AccountDetails = () => {
     <FlexLayout>
       <FlexComponent component={Paper} fit={true}>
         <PageHeader
-          title={accountDetails.name}
-          subheader={"Account"}
-          breadcrumbs={true}
+          title={`${accountDeviceDetails.accountName} - ${accountDeviceDetails.deviceName}`}
+          subheader={"Account Devices"}
         >
           <Button
             variant="contained"
@@ -152,7 +141,7 @@ const AccountDetails = () => {
             onClick={() => {
               setAccountAction({
                 mode: "edit",
-                title: `Edit ${accountDetails.name}`,
+                title: `Edit ${accountDeviceDetails.deviceName} for ${accountDeviceDetails.accountName}`,
               });
               setOpen(true);
             }}
@@ -169,9 +158,13 @@ const AccountDetails = () => {
           }}
         >
           {[
-            { label: "ID", value: accountDetails.id },
-            { label: "Name", value: accountDetails.name },
-            { label: "Active", value: accountDetails.isActive ? "Yes" : "No" },
+            { label: "ID", value: accountDeviceDetails.id },
+            { label: "Device Name", value: accountDeviceDetails.deviceName },
+            { label: "Device Name", value: accountDeviceDetails.accountName },
+            {
+              label: "Active",
+              value: accountDeviceDetails.isActive ? "Yes" : "No",
+            },
           ].map(({ label, value }, index) => (
             <FlexFieldWithLabel key={index} label={label} value={value} />
           ))}
@@ -186,8 +179,8 @@ const AccountDetails = () => {
           textColor="primary"
           sx={{ mb: 2 }}
         >
-          <Tab label="Activation" />
-          <Tab label="Devices" />
+          <Tab label="Account" />
+          <Tab label="Device" />
         </Tabs>
         {loadingTabContent ? (
           <Box
@@ -202,107 +195,97 @@ const AccountDetails = () => {
             <CircularProgress />
           </Box>
         ) : (
-          <Box>
+          <Box sx={{ px: 2 }}>
             {tabIndex === 0 &&
-              (accountActivationRequests.data.length > 0 ? (
-                <PreviewTableComponent
-                  onViewAllClick={() => {
-                    navigate({
-                      pathname: "/account-activation",
-                      search: createSearchParams({
-                        accountId: id,
-                      }).toString(),
-                    });
+              (accountDetails ? (
+                <Box
+                  sx={{
+                    display: "flex",
+                    flexWrap: "wrap",
+                    gap: 2,
                   }}
-                  onRowClick={(row) => {
-                    navigate(`/account-activation/${row.id}`);
-                  }}
-                  data={accountActivationRequests.data}
-                  columns={[
-                    { id: "id", label: "ID", grow: false },
-                    { id: "email", label: "Sent To", grow: false },
-                    { id: "accountId", label: "Account ID", grow: false },
+                >
+                  {[
+                    { label: "ID", value: accountDetails.data.id },
+                    { label: "Name", value: accountDetails.data.name },
                     {
-                      id: "issueDate",
-                      label: "Issue Date",
-                      grow: false,
-                      type: "date",
+                      label: "Active",
+                      value: accountDetails.data.isActive ? "Yes" : "No",
                     },
                     {
-                      id: "expiryDate",
-                      label: "Expiry Date",
-                      grow: false,
-                      type: "date",
+                      label: "Created By",
+                      value: accountDetails.data.createdBy,
                     },
                     {
-                      id: "isClaimed",
-                      label: "Claimed",
-                      grow: false,
-                      type: "boolean",
-                    },
-                    {
-                      id: "claimedDate",
-                      label: "Claimed Date",
-                      grow: false,
-                      type: "date",
-                    },
-                    { id: "createdBy", label: "Created By", grow: false },
-                    {
-                      id: "createdAt",
                       label: "Created Date",
-                      grow: false,
-                      type: "date",
+                      value: new Date(
+                        accountDetails.data.createdAt
+                      ).toLocaleString(),
                     },
-                  ]}
-                />
+                    {
+                      label: "Last Modified Date",
+                      value: new Date(
+                        accountDetails.data.updatedAt
+                      ).toLocaleString(),
+                    },
+                  ].map(({ label, value }, index) => (
+                    <FlexFieldWithLabel
+                      key={index}
+                      label={label}
+                      value={value}
+                    />
+                  ))}
+                </Box>
               ) : (
                 <Typography
                   variant="body2"
                   color="text.secondary"
                   sx={{ p: 2 }}
                 >
-                  No activation requests
+                  No account details available
                 </Typography>
               ))}
 
             {tabIndex === 1 &&
-              (accountDevices.data.length > 0 ? (
-                <PreviewTableComponent
-                  onViewAllClick={() => {
-                    navigate({
-                      pathname: "/account-devices",
-                      search: createSearchParams({
-                        accountId: id,
-                      }).toString(),
-                    });
+              (deviceDetails ? (
+                <Box
+                  sx={{
+                    display: "flex",
+                    flexWrap: "wrap",
+                    gap: 3,
                   }}
-                  onRowClick={() => {}}
-                  data={accountDevices.data}
-                  columns={[
-                    { id: "id", label: "ID", grow: false },
-
-                    { id: "deviceName", label: "Device Name", grow: true },
+                >
+                  {[
+                    { label: "ID", value: deviceDetails.data.id },
+                    { label: "Name", value: deviceDetails.data.name },
                     {
-                      id: "isActive",
-                      label: "Is Active",
-                      grow: false,
-                      type: "boolean",
+                      label: "Active",
+                      value: deviceDetails.data.isActive ? "Yes" : "No",
                     },
-                    { id: "createdBy", label: "Created By", grow: false },
                     {
-                      id: "createdAt",
+                      label: "Created By",
+                      value: deviceDetails.data.createdBy,
+                    },
+                    {
                       label: "Created Date",
-                      grow: false,
-                      type: "date",
+                      value: new Date(
+                        deviceDetails.data.createdAt
+                      ).toLocaleString(),
                     },
                     {
-                      id: "updatedAt",
                       label: "Last Modified Date",
-                      grow: false,
-                      type: "date",
+                      value: new Date(
+                        deviceDetails.data.updatedAt
+                      ).toLocaleString(),
                     },
-                  ]}
-                />
+                  ].map(({ label, value }, index) => (
+                    <FlexFieldWithLabel
+                      key={index}
+                      value={value}
+                      label={label}
+                    />
+                  ))}{" "}
+                </Box>
               ) : (
                 <Typography
                   variant="body2"
@@ -327,14 +310,14 @@ const AccountDetails = () => {
         }}
       >
         {[
-          { label: "Created By", value: accountDetails.createdBy },
+          { label: "Created By", value: accountDeviceDetails.createdBy },
           {
             label: "Created Date",
-            value: new Date(accountDetails.createdAt).toLocaleString(),
+            value: new Date(accountDeviceDetails.createdAt).toLocaleString(),
           },
           {
             label: "Last Modified Date",
-            value: new Date(accountDetails.updatedAt).toLocaleString(),
+            value: new Date(accountDeviceDetails.updatedAt).toLocaleString(),
           },
         ].map(({ label, value }, index) => (
           <Box
@@ -371,13 +354,13 @@ const AccountDetails = () => {
         title={accountAction.title}
       >
         {accountAction.mode === "edit" && (
-          <AccountForm
-            initialValues={accountDetails}
+          <AccountDeviceForm
+            initialValues={accountDeviceDetails}
             onSuccess={async () => {
               setLoading(true);
               try {
                 setOpen(false);
-                await getAccountDetails();
+                await getAccountDeviceDetails({ id: id });
               } catch (error) {
                 console.log("Error", error);
               } finally {
@@ -391,4 +374,4 @@ const AccountDetails = () => {
   );
 };
 
-export default AccountDetails;
+export default AccountDeviceDetails;

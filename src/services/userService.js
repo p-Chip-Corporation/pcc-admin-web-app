@@ -28,14 +28,37 @@ export const createUser = async (user) => {
   }
 };
 
-export const fetchUsers = async () => {
+export const fetchUsers = async ({
+  page = 1,
+  limit = 25,
+  orderBy = "createdAt",
+  order = "asc",
+  query,
+  createdBy,
+  createdAt_gte,
+  createdAt_lte,
+  isActive,
+} = {}) => {
   try {
-    const response = await api.get(`/api/users`);
+    const response = await api.get(`/api/users`, {
+      params: {
+        page,
+        limit,
+        orderBy,
+        order,
+        ...(query && { query }),
+        ...(createdBy && { createdBy }),
+        ...(createdAt_gte && { createdAt_gte }),
+        ...(createdAt_lte && { createdAt_lte }),
+        ...(isActive !== undefined && { isActive }),
+      },
+    });
 
     if (response.status === 200 || response.status === 201) {
       return {
         success: true,
-        data: response.data, // Include the response data (e.g., user profile)
+        data: response.data.results, // assuming you renamed it from 'results' earlier
+        meta: response.data.meta,
       };
     }
 

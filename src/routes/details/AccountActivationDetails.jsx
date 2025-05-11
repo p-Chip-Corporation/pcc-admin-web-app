@@ -2,67 +2,52 @@ import {
   Box,
   Button,
   CircularProgress,
-  Container,
   Divider,
   Paper,
   Typography,
 } from "@mui/material";
 import { useEffect, useState } from "react";
-import { createSearchParams, useNavigate, useParams } from "react-router";
+import { useParams } from "react-router";
 import PageHeader from "../../components/layout/DetailPageHeader";
 import { Tabs, Tab } from "@mui/material";
-import { fetchAccountDevices } from "../../services/accountDeviceService";
-import PreviewTableComponent from "../../components/ui/tables/PreviewTableComponent";
-import AccountForm from "../../forms/AccountForm";
 import RightDrawer from "../../components/RightDrawerComponent";
-import { fetchDeviceById } from "../../services/deviceService";
-import DeviceForm from "../../forms/DeviceForm";
-import FlexLayout from "../../components/layout/FlexLayout";
 import FlexComponent from "../../components/containers/FlexComponent";
 import FlexFieldWithLabel from "../../components/containers/FlexFieldWithLabel";
+import FlexLayout from "../../components/layout/FlexLayout";
+import AccountDeviceForm from "../../forms/AccountDeviceForm";
+import { fetchAccountDetails } from "../../services/accountService";
+import { fetchAccountActivationDetails } from "../../services/accountActivationService";
 
-const DeviceDetails = () => {
+const AccountActivationDetails = () => {
   const { id } = useParams();
-  const navigate = useNavigate();
+
   const [open, setOpen] = useState();
   const [loading, setLoading] = useState(true);
-  const [deviceDetails, setDeviceDetails] = useState(null);
-  const [accounts, setAccounts] = useState({
+  const [accountActivationDetails, setAccountActivationDetails] = useState({});
+  const [accountDetails, setAccountDetails] = useState({
     loaded: false,
-    data: [],
+    data: {},
   });
   const [loadingTabContent, setLoadingTabContent] = useState(true);
-  const [deviceAction, setDeviceAction] = useState({
+  const [accountAction, setAccountAction] = useState({
     mode: "",
     title: "",
   });
-
-  console.log("Device details", deviceDetails);
 
   const [tabIndex, setTabIndex] = useState(0);
   const handleTabChange = (event, newValue) => setTabIndex(newValue);
 
   useEffect(() => {
-    getDeviceDetails();
+    getaccountActivationDetails();
   }, []);
 
-  useEffect(() => {
-    if (!deviceDetails) {
-      return;
-    }
-
-    if (tabIndex === 0 && !accounts.loaded) {
-      getAccounts();
-    }
-  }, [tabIndex, deviceDetails]);
-
-  const getDeviceDetails = async () => {
+  const getaccountActivationDetails = async () => {
     try {
       setLoading(true);
 
-      const request = await fetchDeviceById({ id: id });
+      const request = await fetchAccountActivationDetails({ id: id });
       if (request.success) {
-        setDeviceDetails(request.data);
+        setAccountActivationDetails(request.data);
         setTabIndex(0);
       }
     } catch (error) {
@@ -72,17 +57,25 @@ const DeviceDetails = () => {
     }
   };
 
-  const getAccounts = async () => {
-    if (!deviceDetails) {
+  useEffect(() => {
+    if (!accountActivationDetails) {
       return;
     }
 
+    if (tabIndex === 0 && !accountDetails.loaded) {
+      getAccountDetails();
+    }
+  }, [tabIndex, accountActivationDetails]);
+
+  const getAccountDetails = async () => {
     try {
       setLoadingTabContent(true);
-      const request = await fetchAccountDevices({ deviceId: deviceDetails.id }); // filter by deviceId
 
+      const request = await fetchAccountDetails({
+        id: accountActivationDetails.accountId,
+      });
       if (request.success) {
-        setAccounts({ loaded: true, data: request.data });
+        setAccountDetails({ loaded: true, data: request.data });
       }
     } catch (error) {
       console.log("Error", error);
@@ -112,18 +105,17 @@ const DeviceDetails = () => {
     <FlexLayout>
       <FlexComponent component={Paper} fit={true}>
         <PageHeader
-          title={deviceDetails.name}
-          subheader={"Account"}
-          breadcrumbs={true}
+          title={`${accountActivationDetails.accountName} - ${accountActivationDetails.email}`}
+          subheader={"Account Devices"}
         >
           <Button
             variant="contained"
             size="small"
             sx={{ borderRadius: 1 }}
             onClick={() => {
-              setDeviceAction({
+              setAccountAction({
                 mode: "edit",
-                title: `Edit ${deviceDetails.name}`,
+                title: `Edit ${accountActivationDetails.deviceName} for ${accountActivationDetails.accountName}`,
               });
               setOpen(true);
             }}
@@ -136,20 +128,56 @@ const DeviceDetails = () => {
           sx={{
             display: "flex",
             flexWrap: "wrap",
-            gap: 3,
+            gap: 2,
           }}
         >
           {[
-            { label: "ID", value: deviceDetails.id },
-            { label: "Name", value: deviceDetails.name },
-            { label: "Active", value: deviceDetails.isActive ? "Yes" : "No" },
+            { label: "ID", value: accountActivationDetails.id },
+            {
+              label: "Account Id",
+              value: accountActivationDetails.accountId,
+            },
+            {
+              label: "Account Name",
+              value: accountActivationDetails.accountName,
+            },
+            {
+              label: "Issued To",
+              value: accountActivationDetails.email,
+            },
+            {
+              label: "Issue Date",
+              value: new Date(
+                accountActivationDetails.issueDate
+              ).toLocaleString(),
+            },
+            {
+              label: "Expiration Date",
+              value: accountActivationDetails.expiryDate
+                ? new Date(accountActivationDetails.expiryDate).toLocaleString()
+                : "-",
+            },
+            {
+              label: "Active",
+              value: accountActivationDetails.isActive ? "Yes" : "No",
+            },
+            {
+              label: "Claimed",
+              value: accountActivationDetails.isClaimed ? "Yes" : "No",
+            },
+            {
+              label: "Claim Date",
+              value: accountActivationDetails.claimDate
+                ? new Date(accountActivationDetails.claimDate).toLocaleString()
+                : "-",
+            },
           ].map(({ label, value }, index) => (
-            <FlexFieldWithLabel key={index} value={value} label={label} />
+            <FlexFieldWithLabel key={index} label={label} value={value} />
           ))}
         </Box>
       </FlexComponent>
 
-      <FlexComponent component={Paper} sx={{ p: 3 }}>
+      <FlexComponent component={Paper}>
         <Tabs
           value={tabIndex}
           onChange={handleTabChange}
@@ -157,7 +185,7 @@ const DeviceDetails = () => {
           textColor="primary"
           sx={{ mb: 2 }}
         >
-          <Tab label="Accounts" />
+          <Tab label="Account" />
         </Tabs>
         {loadingTabContent ? (
           <Box
@@ -172,57 +200,54 @@ const DeviceDetails = () => {
             <CircularProgress />
           </Box>
         ) : (
-          <Box>
+          <Box sx={{ px: 2 }}>
             {tabIndex === 0 &&
-              (accounts.data.length > 0 ? (
-                <PreviewTableComponent
-                  onViewAllClick={() => {
-                    navigate({
-                      pathname: "/account-devices",
-                      search: createSearchParams({
-                        deviceId: id,
-                      }).toString(),
-                    });
+              (accountDetails ? (
+                <Box
+                  sx={{
+                    display: "flex",
+                    flexWrap: "wrap",
+                    gap: 2,
                   }}
-                  onRowClick={(row) => {
-                    navigate(`/account-devices?deviceId=${row.deviceId}`);
-                  }}
-                  data={accounts.data}
-                  columns={[
-                    { id: "accountId", label: "Account ID", grow: false },
-                    { id: "accountName", label: "Account Name", grow: true },
+                >
+                  {[
+                    { label: "ID", value: accountDetails.data.id },
+                    { label: "Name", value: accountDetails.data.name },
                     {
-                      id: "isActive",
-                      label: "Is Active",
-                      grow: false,
-                      type: "boolean",
+                      label: "Active",
+                      value: accountDetails.data.isActive ? "Yes" : "No",
                     },
                     {
-                      id: "createdBy",
                       label: "Created By",
-                      grow: false,
+                      value: accountDetails.data.createdBy,
                     },
                     {
-                      id: "createdAt",
                       label: "Created Date",
-                      grow: false,
-                      type: "date",
+                      value: new Date(
+                        accountDetails.data.createdAt
+                      ).toLocaleString(),
                     },
                     {
-                      id: "updatedAt",
                       label: "Last Modified Date",
-                      grow: false,
-                      type: "date",
+                      value: new Date(
+                        accountDetails.data.updatedAt
+                      ).toLocaleString(),
                     },
-                  ]}
-                />
+                  ].map(({ label, value }, index) => (
+                    <FlexFieldWithLabel
+                      key={index}
+                      label={label}
+                      value={value}
+                    />
+                  ))}
+                </Box>
               ) : (
                 <Typography
                   variant="body2"
                   color="text.secondary"
                   sx={{ p: 2 }}
                 >
-                  No devices have been registred to accounts
+                  No account details available
                 </Typography>
               ))}
           </Box>
@@ -240,14 +265,18 @@ const DeviceDetails = () => {
         }}
       >
         {[
-          { label: "Created By", value: deviceDetails.createdBy },
+          { label: "Created By", value: accountActivationDetails.createdBy },
           {
             label: "Created Date",
-            value: new Date(deviceDetails.createdAt).toLocaleString(),
+            value: new Date(
+              accountActivationDetails.createdAt
+            ).toLocaleString(),
           },
           {
             label: "Last Modified Date",
-            value: new Date(deviceDetails.updatedAt).toLocaleString(),
+            value: new Date(
+              accountActivationDetails.updatedAt
+            ).toLocaleString(),
           },
         ].map(({ label, value }, index) => (
           <Box
@@ -276,21 +305,21 @@ const DeviceDetails = () => {
         open={open}
         onClose={() => {
           setOpen(false);
-          setDeviceAction({
+          setAccountAction({
             mode: "",
             title: "",
           });
         }}
-        title={deviceAction.title}
+        title={accountAction.title}
       >
-        {deviceAction.mode === "edit" && (
-          <DeviceForm
-            initialValues={deviceDetails}
+        {accountAction.mode === "edit" && (
+          <AccountDeviceForm
+            initialValues={accountActivationDetails}
             onSuccess={async () => {
               setLoading(true);
               try {
                 setOpen(false);
-                await getDeviceDetails();
+                await getaccountActivationDetails({ id: id });
               } catch (error) {
                 console.log("Error", error);
               } finally {
@@ -304,4 +333,4 @@ const DeviceDetails = () => {
   );
 };
 
-export default DeviceDetails;
+export default AccountActivationDetails;

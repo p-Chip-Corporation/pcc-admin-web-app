@@ -1,13 +1,10 @@
 import { Box, Paper, Typography } from "@mui/material";
-import BreadcrumbsComponent from "./BreadcrumbComponent";
+import BreadcrumbsComponent from "../BreadcrumbComponent";
 
 const PageHeader = ({ title, icon, children }) => {
   return (
     <Box
-      component={Paper}
       sx={{
-        px: 2,
-        py: 1,
         display: "flex",
         flexDirection: "row",
         width: "100%",
@@ -16,7 +13,13 @@ const PageHeader = ({ title, icon, children }) => {
       }}
     >
       <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
-        <Box sx={{ display: "flex", alignItems: "end", gap: 2 }}>
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "end",
+            gap: 2,
+          }}
+        >
           {icon && (
             <Box sx={{ display: "flex", alignItems: "center" }}>{icon}</Box>
           )}
@@ -24,8 +27,6 @@ const PageHeader = ({ title, icon, children }) => {
             {title}
           </Typography>
         </Box>
-
-        <BreadcrumbsComponent />
       </Box>
 
       <Box

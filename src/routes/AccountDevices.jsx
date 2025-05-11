@@ -1,35 +1,69 @@
-import {
-  Box,
-  CircularProgress,
-  Container,
-  IconButton,
-  Paper,
-} from "@mui/material";
-import PageHeader from "../components/PageHeader";
+import { CircularProgress, Paper } from "@mui/material";
 import PaginatedTableComponent from "../components/PaginatedTableComponent";
-import InfoPopperComponent from "../components/InfoPopperComponent";
-import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
 import { useEffect, useState } from "react";
 import RightDrawer from "../components/RightDrawerComponent";
 import AccountDeviceForm from "../forms/AccountDeviceForm";
 import { fetchAccountDevices } from "../services/accountDeviceService";
 import QrCodeScannerIcon from "@mui/icons-material/QrCodeScanner";
+import { useNavigate, useSearchParams } from "react-router";
+import FlexComponent from "../components/containers/FlexComponent";
+import FilterButton from "../components/FilterButtonComponent";
+import { Add, FilterList } from "@mui/icons-material";
+import SquareButton from "../components/ui/SmallButton";
+import PageHeader from "../components/layout/PageHeader";
+import LoadingSpinner from "../components/layout/LoadingSpinner";
+import FilterComponent from "../components/FilterComponent";
+import DynamicTable from "../components/ui/tables/DynamicTable";
 
 const AccountDevices = () => {
   const [open, setOpen] = useState();
+  const [drawerView, setDrawerView] = useState({
+    mode: "",
+    title: "",
+  });
+
   const [loading, setLoading] = useState(true);
   const [accountDevices, setAccountDevices] = useState([]);
+  const [selectedAccountDevices, setSelectedAccountDevices] = useState([]);
+
+  const [meta, setMeta] = useState({});
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+
+  const limit = parseInt(searchParams.get("limit") || "25", 10);
+  const page = parseInt(searchParams.get("page") || "1", 10);
+  const orderBy = searchParams.get("orderBy") || "createdAt";
+  const order = searchParams.get("order") || "asc";
+
+  const filters = {
+    createdBy: searchParams.get("createdBy") || undefined,
+    createdAt_gte: searchParams.get("createdAt_gte") || undefined,
+    createdAt_lte: searchParams.get("createdAt_lte") || undefined,
+    isActive: searchParams.get("isActive") || undefined,
+    accountId: searchParams.get("accountId") || undefined,
+    deviceId: searchParams.get("deviceId") || undefined,
+  };
+
+  const query = searchParams.get("query") || undefined;
 
   useEffect(() => {
-    getAccountActivations();
-  }, []);
+    getAccountDevices();
+  }, [limit, page, orderBy, order, searchParams.toString()]);
 
-  const getAccountActivations = async () => {
+  const getAccountDevices = async () => {
     try {
       setLoading(true);
-      const response = await fetchAccountDevices();
+      const response = await fetchAccountDevices({
+        page,
+        limit,
+        orderBy,
+        order,
+        query,
+        ...filters,
+      });
       if (response.success) {
         setAccountDevices(response.data);
+        setMeta(response.meta);
       }
     } catch (error) {
       console.log("Error", error);
@@ -38,68 +72,64 @@ const AccountDevices = () => {
     }
   };
 
-  if (loading) {
-    return (
-      <Box
-        sx={{
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
-          width: "100vw",
-          height: "100vh",
-        }}
-      >
-        <CircularProgress />
-      </Box>
-    );
-  }
-
   return (
-    <Container
-      maxWidth="xl"
-      sx={{
-        display: "flex",
-        flexDirection: "column",
-        flex: 1,
-        width: "100%",
-        height: "100%",
-      }}
-    >
-      <Box
-        sx={{
-          display: "flex",
-          flexDirection: "column",
-          flex: 1,
-          width: "100%",
-          height: "100%",
-          padding: 1,
-          gap: 2,
-        }}
+    <FlexComponent component={Paper}>
+      <PageHeader
+        icon={<QrCodeScannerIcon fontSize="large" />}
+        title="DEVICES REGISTERED TO ACCOUNTS"
       >
-        <PageHeader
-          icon={<QrCodeScannerIcon fontSize="large" />}
-          title={"Account Devices"}
+        <FilterButton
+          onClick={() => {
+            setDrawerView({
+              mode: "filter",
+              title: "Filter Account Devices",
+            });
+            setOpen(true);
+          }}
         >
-          <Box sx={{ display: "flex", flexDirection: "row", gap: "1" }}>
-            <InfoPopperComponent title="How to use this section">
-              You can manage customer devices here. Important note. A device can
-              only be allocated to one account at a time. To reallocate the
-              devices, make sure to remove it from the current account before
-              allocating it to another account. Make sure to click{" "}
-              <strong>“Save”</strong> after making changes.
-            </InfoPopperComponent>
+          <FilterList fontSize="small" />
+        </FilterButton>
 
-            <IconButton
-              onClick={() => {
-                setOpen(true);
-              }}
-            >
-              <AddCircleOutlineIcon />
-            </IconButton>
-          </Box>
-        </PageHeader>
-        <PaginatedTableComponent
+        {selectedAccountDevices.length > 0 ? (
+          <BulkActionsMenuButton
+            selected={selectedAccountDevices}
+            actions={[
+              {
+                label: "Activate",
+                onClick: (items) => console.log("Disable", items),
+              },
+              {
+                label: "Deactivate",
+                onClick: (items) => console.log("Disable", items),
+              },
+            ]}
+          />
+        ) : (
+          <SquareButton
+            variant="contained"
+            onClick={() => {
+              setDrawerView({
+                mode: "add",
+                title: "Register a Device with an Account",
+              });
+              setOpen(true);
+            }}
+          >
+            <Add fontSize="small" />
+          </SquareButton>
+        )}
+      </PageHeader>
+
+      {loading ? (
+        <LoadingSpinner title={"Loading Users"} />
+      ) : (
+        <DynamicTable
+          onRowClick={(row) => {
+            navigate(`/account-devices/${row.id}`);
+          }}
+          meta={meta}
+          selected={selectedAccountDevices}
+          onSelectChange={setSelectedAccountDevices}
           data={accountDevices}
           columns={[
             { id: "id", label: "ID", grow: false },
@@ -126,21 +156,21 @@ const AccountDevices = () => {
             },
           ]}
         />
-      </Box>
+      )}
       <RightDrawer
         open={open}
         onClose={() => {
           setOpen(false);
         }}
-        title={"Register device to an account"}
+        title={drawerView.title}
       >
-        {open && (
+        {drawerView.mode === "add" && (
           <AccountDeviceForm
             onSuccess={async () => {
               setLoading(true);
               try {
                 setOpen(false);
-                await getAccountActivations();
+                await getAccountDevices();
               } catch (error) {
                 console.log("Error", error);
               } finally {
@@ -149,8 +179,15 @@ const AccountDevices = () => {
             }}
           />
         )}
+        {drawerView.mode === "filter" && (
+          <FilterComponent
+            onApply={() => {
+              setOpen(false);
+            }}
+          />
+        )}
       </RightDrawer>
-    </Container>
+    </FlexComponent>
   );
 };
 

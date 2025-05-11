@@ -7,20 +7,19 @@ import {
   Typography,
 } from "@mui/material";
 import { useEffect, useState } from "react";
-import { useParams } from "react-router";
-import PageHeader from "../../components/PageHeader";
+import { useNavigate, useParams } from "react-router";
+import PageHeader from "../../components/layout/DetailPageHeader";
 import { Tabs, Tab } from "@mui/material";
-import PreviewTableComponent from "../../components/PreviewTableComponent";
-import AccountForm from "../../forms/AccountForm";
+import PreviewTableComponent from "../../components/ui/tables/PreviewTableComponent";
 import RightDrawer from "../../components/RightDrawerComponent";
 import { fetchUserById } from "../../services/userService";
 import { fetchAccounts } from "../../services/accountService";
 import { fetchDevices } from "../../services/deviceService";
 import UserForm from "../../forms/UserForm";
-import MetaFooter from "../../components/MetaFooter";
 
 const UserDetails = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [open, setOpen] = useState();
   const [loading, setLoading] = useState(true);
   const [userDetails, setUserDetails] = useState({});
@@ -169,7 +168,6 @@ const UserDetails = () => {
           }}
         >
           {[
-            { label: "User ID", value: userDetails.id },
             { label: "Name", value: userDetails.name },
             { label: "Email", value: userDetails.email },
             { label: "Role", value: userDetails.role },
@@ -332,6 +330,49 @@ const UserDetails = () => {
           </Box>
         )}
       </Paper>
+      <Paper
+        sx={{
+          mt: "auto", // pushes this element to the bottom in a flex column layout
+          p: 1,
+          display: "flex",
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "space-between",
+          flexWrap: "wrap",
+        }}
+      >
+        {[
+          {
+            label: "Created Date",
+            value: new Date(userDetails.createdAt).toLocaleString(),
+          },
+          {
+            label: "Last Modified Date",
+            value: new Date(userDetails.updatedAt).toLocaleString(),
+          },
+        ].map(({ label, value }, index) => (
+          <Box
+            key={index}
+            sx={{
+              flex: "1 1 300px",
+              display: "flex",
+              flexDirection: "column",
+              textAlign: "center",
+            }}
+          >
+            <Typography
+              variant="caption"
+              color="text.secondary"
+              sx={{ mb: 0.5 }}
+            >
+              {label}
+            </Typography>
+            <Typography variant="body1" sx={{ wordBreak: "break-word" }}>
+              {value}
+            </Typography>
+          </Box>
+        ))}
+      </Paper>
       <RightDrawer
         open={open}
         onClose={() => {
@@ -360,11 +401,6 @@ const UserDetails = () => {
           />
         )}
       </RightDrawer>
-      <MetaFooter
-        createdBy={userDetails.createdBy}
-        createdAt={userDetails.createdAt}
-        updatedAt={userDetails.updatedAt}
-      />
     </Container>
   );
 };

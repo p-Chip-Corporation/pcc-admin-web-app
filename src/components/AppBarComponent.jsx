@@ -15,6 +15,7 @@ import {
   Menu,
   useMediaQuery,
   useTheme,
+  Container,
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 import { useState } from "react";
@@ -31,6 +32,7 @@ import QrCodeScannerIcon from "@mui/icons-material/QrCodeScanner";
 import { useNavigate } from "react-router";
 import SignOutButton from "./SignOutButton";
 import { useUser } from "../providers/UserProvider";
+import BreadcrumbsComponent from "./BreadcrumbComponent";
 
 const navgList = [
   {
@@ -88,55 +90,93 @@ export default function AppBarComponent({ children }) {
         position="fixed"
         sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}
       >
-        <Toolbar>
-          <IconButton
-            color="inherit"
-            edge="start"
-            onClick={toggleDrawer}
-            sx={{ mr: 2, cursor: "pointer" }}
+        <Toolbar
+          variant="regular"
+          sx={{
+            height: "auto",
+            display: "flex",
+            flex: 1,
+            padding: 1,
+            width: "100%",
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
+        >
+          <Box
+            sx={{
+              display: "flex",
+              flex: 1,
+              gap: 2,
+              alignItems: "center",
+              justifyContent: "flex-start",
+            }}
           >
-            <MenuIcon />
-          </IconButton>
-          <Box sx={{ display: "flex", alignItems: "end", gap: 1 }}>
+            {" "}
+            <IconButton
+              color="inherit"
+              edge="start"
+              onClick={toggleDrawer}
+              sx={{ mr: 2, cursor: "pointer" }}
+            >
+              <MenuIcon />
+            </IconButton>
+            <BreadcrumbsComponent />
+          </Box>
+          <Box
+            sx={{
+              display: "flex",
+              flex: 1,
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            {" "}
             <Box
               component={"img"}
-              height={40}
+              height={50}
               width={"auto"}
               src={logo}
               sx={{ objectFit: "cover" }}
             />
-            {!isMobile && (
-              <Typography
-                fontWeight={"bold"}
-                variant="h6"
-                noWrap
-                component="div"
-              >
-                Administrator Portal
-              </Typography>
-            )}
           </Box>
-
-          <Box sx={{ flexGrow: 1 }} />
-          {!isMobile && <Typography>Welcome, {user.name}</Typography>}
-
-          <IconButton onClick={handleMenuOpen} size="small" sx={{ ml: 2 }}>
-            <Avatar
-              alt={user.name}
-              src="/avatar.png"
-              sx={{ width: 32, height: 32 }}
-            />
-          </IconButton>
-
-          <Menu
-            anchorEl={menuAnchor}
-            open={menuOpen}
-            onClose={handleMenuClose}
-            anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-            transformOrigin={{ vertical: "top", horizontal: "right" }}
+          <Box
+            sx={{
+              display: "flex",
+              flex: 1,
+              alignItems: "center",
+              justifyContent: "flex-end",
+            }}
           >
-            <SignOutButton onClick={handleMenuClose} />
-          </Menu>
+            {" "}
+            <Box
+              sx={{
+                display: "flex",
+                gap: 2,
+                alignItems: "center",
+                justifyContent: "flex-end",
+              }}
+            >
+              {!isMobile && <Typography>Welcome, {user.name}</Typography>}
+
+              <IconButton onClick={handleMenuOpen} size="small" sx={{ ml: 2 }}>
+                <Avatar
+                  alt={user.name}
+                  src="/avatar.png"
+                  sx={{ width: 32, height: 32 }}
+                />
+              </IconButton>
+
+              <Menu
+                anchorEl={menuAnchor}
+                open={menuOpen}
+                onClose={handleMenuClose}
+                anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+                transformOrigin={{ vertical: "top", horizontal: "right" }}
+              >
+                <SignOutButton onClick={handleMenuClose} />
+              </Menu>
+            </Box>
+          </Box>
         </Toolbar>
       </AppBar>
 
@@ -184,7 +224,9 @@ export default function AppBarComponent({ children }) {
         }}
       >
         <Toolbar /> {/* Spacer for AppBar */}
-        <Box sx={{ flex: 1, overflow: "auto", padding: 1 }}>{children}</Box>
+        <Container maxWidth="xl" sx={{ flex: 1, overflow: "auto", padding: 1 }}>
+          {children}
+        </Container>
       </Box>
     </Box>
   );

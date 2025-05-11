@@ -11,6 +11,8 @@ import AccountDevices from "./routes/AccountDevices";
 import AccountDetails from "./routes/details/AccountDetails";
 import DeviceDetails from "./routes/details/DeviceDetails";
 import UserDetails from "./routes/details/UserDetails";
+import AccountDeviceDetails from "./routes/details/AccountDeviceDetails";
+import AccountActivationDetails from "./routes/details/AccountActivationDetails";
 
 export default function AppRouter() {
   return (
@@ -24,7 +26,12 @@ export default function AppRouter() {
         <Route path="/users" element={<Users />} />
         <Route path="/users/:id" element={<UserDetails />} />
         <Route path="/account-activation" element={<AccountActiviation />} />
+        <Route
+          path="/account-activation/:id"
+          element={<AccountActivationDetails />}
+        />
         <Route path="/account-devices" element={<AccountDevices />} />
+        <Route path="/account-devices/:id" element={<AccountDeviceDetails />} />
       </Route>
       <Route path="/auth" element={<Auth />} />
     </Routes>

@@ -1,4 +1,10 @@
-import { Breadcrumbs, Typography, Link as MuiLink } from "@mui/material";
+import {
+  Breadcrumbs,
+  Typography,
+  Link as MuiLink,
+  useTheme,
+  useMediaQuery,
+} from "@mui/material";
 import { Link, useLocation } from "react-router-dom";
 
 const navgList = [
@@ -11,6 +17,8 @@ const navgList = [
 ];
 
 const BreadcrumbsComponent = () => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const location = useLocation();
   const pathnames = location.pathname.split("/").filter(Boolean);
 
@@ -25,30 +33,34 @@ const BreadcrumbsComponent = () => {
   });
 
   return (
-    <Breadcrumbs separator="›" aria-label="breadcrumb">
-      {breadcrumbs.map((crumb, idx) =>
-        idx === breadcrumbs.length - 1 ? (
-          <Typography
-            key={crumb.to}
-            color="text.primary"
-            fontWeight={500}
-            fontSize="0.875rem"
-          >
-            {crumb.label}
-          </Typography>
-        ) : (
-          <MuiLink
-            key={crumb.to}
-            component={Link}
-            to={crumb.to}
-            underline="hover"
-            color="inherit"
-            fontSize="0.875rem"
-          >
-            {crumb.label}
-          </MuiLink>
-        )
-      )}
+    <Breadcrumbs
+      separator="›"
+      aria-label="breadcrumb"
+      sx={{ color: "inherit" }}
+    >
+      {isMobile
+        ? breadcrumbs.map((crumb, idx) => (
+            <MuiLink
+              key={crumb.to}
+              component={Link}
+              to={crumb.to}
+              underline="hover"
+              fontWeight={500}
+              color="inherit"
+            >
+              {crumb.label.toUpperCase()}
+            </MuiLink>
+          ))
+        : breadcrumbs.map((crumb, idx) => (
+            <Typography
+              key={crumb.to}
+              fontWeight={idx < breadcrumbs.length - 1 ? 500 : 400}
+              fontSize="0.75rem"
+              color="inherit"
+            >
+              {crumb.label.toUpperCase()}
+            </Typography>
+          ))}
     </Breadcrumbs>
   );
 };
