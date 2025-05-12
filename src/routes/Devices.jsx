@@ -1,5 +1,4 @@
 import { Box, Paper } from "@mui/material";
-import PaginatedTableComponent from "../components/PaginatedTableComponent";
 import { useEffect, useState } from "react";
 import RightDrawer from "../components/RightDrawerComponent";
 import { fetchDevices } from "../services/deviceService";
@@ -7,12 +6,12 @@ import DeviceForm from "../forms/DeviceForm";
 import DevicesIcon from "@mui/icons-material/Devices";
 import { useNavigate, useSearchParams } from "react-router";
 import FlexComponent from "../components/containers/FlexComponent";
-import FilterButton from "../components/FilterButtonComponent";
+import FilterButton from "../components/ui/buttons/FilterButtonComponent";
 import { Add, FilterList } from "@mui/icons-material";
-import BulkActionsMenuButton from "../components/ui/BulkActionButton";
-import SquareButton from "../components/ui/SmallButton";
+import BulkActionsMenuButton from "../components/ui/buttons/BulkActionButton";
+import SquareButton from "../components/ui/buttons/SmallButton";
 import LoadingSpinner from "../components/layout/LoadingSpinner";
-import FilterComponent from "../components/FilterComponent";
+import FilterComponent from "../components/ui/FilterComponent";
 import PageHeader from "../components/layout/PageHeader";
 import DynamicTable from "../components/ui/tables/DynamicTable";
 

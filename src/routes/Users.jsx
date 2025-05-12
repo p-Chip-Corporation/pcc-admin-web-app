@@ -7,11 +7,11 @@ import { useNavigate, useSearchParams } from "react-router";
 import FlexComponent from "../components/containers/FlexComponent";
 import PageHeader from "../components/layout/PageHeader";
 import { Add, FilterList, Person } from "@mui/icons-material";
-import FilterButton from "../components/FilterButtonComponent";
-import BulkActionsMenuButton from "../components/ui/BulkActionButton";
-import SquareButton from "../components/ui/SmallButton";
+import FilterButton from "../components/ui/buttons/FilterButtonComponent";
+import BulkActionsMenuButton from "../components/ui/buttons/BulkActionButton";
+import SquareButton from "../components/ui/buttons/SmallButton";
 import LoadingSpinner from "../components/layout/LoadingSpinner";
-import FilterComponent from "../components/FilterComponent";
+import FilterComponent from "../components/ui/FilterComponent";
 import DynamicTable from "../components/ui/tables/DynamicTable";
 
 const Users = () => {

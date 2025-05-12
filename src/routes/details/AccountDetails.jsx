@@ -276,7 +276,9 @@ const AccountDetails = () => {
                       }).toString(),
                     });
                   }}
-                  onRowClick={() => {}}
+                  onRowClick={(row) => {
+                    navigate(`/account-devices/${row.id}`);
+                  }}
                   data={accountDevices.data}
                   columns={[
                     { id: "id", label: "ID", grow: false },

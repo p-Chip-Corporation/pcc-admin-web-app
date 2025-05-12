@@ -5,13 +5,14 @@ import { fetchAccountActivations } from "../services/accountActivationService";
 import MailOutlineIcon from "@mui/icons-material/MailOutline";
 import { useNavigate, useSearchParams } from "react-router";
 import FlexComponent from "../components/containers/FlexComponent";
-import FilterButton from "../components/FilterButtonComponent";
+import FilterButton from "../components/ui/buttons/FilterButtonComponent";
 import { Add, FilterList } from "@mui/icons-material";
-import SquareButton from "../components/ui/SmallButton";
+import SquareButton from "../components/ui/buttons/SmallButton";
 import PageHeader from "../components/layout/PageHeader";
 import LoadingSpinner from "../components/layout/LoadingSpinner";
 import DynamicTable from "../components/ui/tables/DynamicTable";
-import FilterComponent from "../components/FilterComponent";
+import FilterComponent from "../components/ui/FilterComponent";
+import BulkActionsMenuButton from "../components/ui/buttons/BulkActionButton";
 
 const AccountActivation = () => {
   const [open, setOpen] = useState();

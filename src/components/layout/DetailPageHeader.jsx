@@ -1,5 +1,5 @@
 import { Box, Paper, Typography } from "@mui/material";
-import BreadcrumbsComponent from "../BreadcrumbComponent";
+import BreadcrumbsComponent from "../ui/BreadcrumbComponent";
 
 const PageHeader = ({ title, icon, children }) => {
   return (

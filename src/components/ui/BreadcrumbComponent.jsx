@@ -18,7 +18,7 @@ const navgList = [
 
 const BreadcrumbsComponent = () => {
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const location = useLocation();
   const pathnames = location.pathname.split("/").filter(Boolean);
 
@@ -39,7 +39,7 @@ const BreadcrumbsComponent = () => {
       sx={{ color: "inherit" }}
     >
       {isMobile
-        ? breadcrumbs.map((crumb, idx) => (
+        ? breadcrumbs.map((crumb) => (
             <MuiLink
               key={crumb.to}
               component={Link}

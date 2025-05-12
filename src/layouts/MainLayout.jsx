@@ -1,5 +1,4 @@
 import { Outlet, useNavigate } from "react-router-dom";
-import AppBarComponent from "../components/AppBarComponent";
 import { useMsal } from "@azure/msal-react";
 import { useEffect, useState } from "react";
 import { Box, CircularProgress, Container } from "@mui/material";
@@ -7,6 +6,7 @@ import { InteractionStatus } from "@azure/msal-browser";
 import { fetchUserProfilePermissions } from "../services/authService"; // 🔍 your service to get user profile
 import { useUser } from "../providers/UserProvider";
 import { setAxiosAuthHandlers } from "../config/axios";
+import AppBarComponent from "../components/ui/AppBarComponent";
 
 const MainLayout = () => {
   const { accounts, inProgress } = useMsal();
@@ -65,7 +65,7 @@ const MainLayout = () => {
 
   return (
     <AppBarComponent>
-        <Outlet />
+      <Outlet />
     </AppBarComponent>
   );
 };

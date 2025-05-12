@@ -1,5 +1,4 @@
-import { CircularProgress, Paper } from "@mui/material";
-import PaginatedTableComponent from "../components/PaginatedTableComponent";
+import { Paper } from "@mui/material";
 import { useEffect, useState } from "react";
 import RightDrawer from "../components/RightDrawerComponent";
 import AccountDeviceForm from "../forms/AccountDeviceForm";
@@ -7,13 +6,15 @@ import { fetchAccountDevices } from "../services/accountDeviceService";
 import QrCodeScannerIcon from "@mui/icons-material/QrCodeScanner";
 import { useNavigate, useSearchParams } from "react-router";
 import FlexComponent from "../components/containers/FlexComponent";
-import FilterButton from "../components/FilterButtonComponent";
 import { Add, FilterList } from "@mui/icons-material";
-import SquareButton from "../components/ui/SmallButton";
+import SquareButton from "../components/ui/buttons/SmallButton";
 import PageHeader from "../components/layout/PageHeader";
 import LoadingSpinner from "../components/layout/LoadingSpinner";
-import FilterComponent from "../components/FilterComponent";
 import DynamicTable from "../components/ui/tables/DynamicTable";
+import FilterButton from "../components/ui/buttons/FilterButtonComponent";
+import FilterComponent from "../components/ui/FilterComponent";
+import BulkActionsMenuButton from "../components/ui/buttons/BulkActionButton";
+
 
 const AccountDevices = () => {
   const [open, setOpen] = useState();

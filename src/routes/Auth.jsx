@@ -9,8 +9,8 @@ import logo from "../assets/logo-light.png";
 import { useMsal } from "@azure/msal-react";
 import { useNavigate } from "react-router";
 import { useEffect, useState } from "react";
-import { SignInButton } from "../components/SignInButton";
 import { authenticateUserAcccess } from "../services/authService";
+import { SignInButton } from "../components/ui/buttons/SignInButton";
 
 const Auth = () => {
   const { accounts } = useMsal();

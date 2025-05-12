@@ -1,8 +1,8 @@
 import React from "react";
 import { useMsal } from "@azure/msal-react";
 import { MenuItem } from "@mui/material";
-import { useUser } from "../providers/UserProvider";
-import { logoutUser } from "../services/authService";
+import { useUser } from "../../../providers/UserProvider";
+import { logoutUser } from "../../../services/authService";
 
 export default function SignOutButton({ method = "redirect", onClick }) {
   const { instance } = useMsal();

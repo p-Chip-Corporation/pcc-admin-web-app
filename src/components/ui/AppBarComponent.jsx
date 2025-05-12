@@ -19,7 +19,7 @@ import {
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 import { useState } from "react";
-import logo from "../assets/logo-white.png";
+import logo from "../../assets/logo-white.png";
 
 const drawerWidth = 240;
 
@@ -30,9 +30,9 @@ import AccountBoxIcon from "@mui/icons-material/AccountBox";
 import MailOutlineIcon from "@mui/icons-material/MailOutline";
 import QrCodeScannerIcon from "@mui/icons-material/QrCodeScanner";
 import { useNavigate } from "react-router";
-import SignOutButton from "./SignOutButton";
-import { useUser } from "../providers/UserProvider";
+import SignOutButton from "./buttons/SignOutButton";
 import BreadcrumbsComponent from "./BreadcrumbComponent";
+import { useUser } from "../../providers/UserProvider";
 
 const navgList = [
   {
@@ -73,7 +73,6 @@ export default function AppBarComponent({ children }) {
   const [menuAnchor, setMenuAnchor] = useState(null);
   const menuOpen = Boolean(menuAnchor);
   const { user } = useUser();
-  console.log("User", user);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
