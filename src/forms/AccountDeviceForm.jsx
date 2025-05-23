@@ -22,7 +22,7 @@ const validationSchema = Yup.object({
   isActive: Yup.boolean(),
 });
 
-export default function AccountDeviceForm({ onSuccess }) {
+export default function AccountDeviceForm({ initialValues, onSuccess }) {
   const [accounts, setAccounts] = useState([]);
   const [loadingAccounts, setLoadingAccounts] = useState(true);
   const [devices, setDevices] = useState([]);
@@ -50,8 +50,9 @@ export default function AccountDeviceForm({ onSuccess }) {
 
   const formik = useFormik({
     initialValues: {
-      accountId: "",
-      deviceId: "",
+      id: initialValues?.id || "",
+      accountId: initialValues?.accountId || "",
+      deviceId: initialValues?.deviceId || "",
       isActive: true,
     },
     validationSchema,

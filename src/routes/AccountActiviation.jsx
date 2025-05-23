@@ -13,6 +13,7 @@ import LoadingSpinner from "../components/layout/LoadingSpinner";
 import DynamicTable from "../components/ui/tables/DynamicTable";
 import FilterComponent from "../components/ui/FilterComponent";
 import BulkActionsMenuButton from "../components/ui/buttons/BulkActionButton";
+import AccountActivationForm from "../forms/AccountActiviationForm";
 
 const AccountActivation = () => {
   const [open, setOpen] = useState();
@@ -154,7 +155,7 @@ const AccountActivation = () => {
         title={drawerView.title}
       >
         {drawerView.mode === "add" && (
-          <AccountDeviceForm
+          <AccountActivationForm
             onSuccess={async () => {
               setLoading(true);
               try {

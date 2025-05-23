@@ -23,6 +23,24 @@ export const createAccountDevice = async (values) => {
   }
 };
 
+export const initializeAccountDevice = async ({ accountDeviceId }) => {
+  try {
+    const response = await api.put(`/api/accounts-devices/initialize/${accountDeviceId}`);
+
+    if (response.status === 200 || response.status === 201) {
+      return {
+        success: true,
+        data: response.data, // Include the response data (e.g., user profile)
+      };
+    }
+  } catch (error) {
+    return {
+      success: false,
+      error: error.response?.data?.error || error.message,
+    };
+  }
+};
+
 export const fetchAccountDevices = async ({
   accountId,
   deviceId,

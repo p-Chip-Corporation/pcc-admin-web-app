@@ -3,6 +3,7 @@ import {
   Button,
   CircularProgress,
   Divider,
+  MenuItem,
   Paper,
   Typography,
 } from "@mui/material";
@@ -10,7 +11,10 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router";
 import PageHeader from "../../components/layout/DetailPageHeader";
 import { Tabs, Tab } from "@mui/material";
-import { fetchAccountDeviceDetails } from "../../services/accountDeviceService";
+import {
+  fetchAccountDeviceDetails,
+  initializeAccountDevice,
+} from "../../services/accountDeviceService";
 import RightDrawer from "../../components/RightDrawerComponent";
 import FlexComponent from "../../components/containers/FlexComponent";
 import FlexFieldWithLabel from "../../components/containers/FlexFieldWithLabel";
@@ -18,6 +22,7 @@ import FlexLayout from "../../components/layout/FlexLayout";
 import AccountDeviceForm from "../../forms/AccountDeviceForm";
 import { fetchAccountDetails } from "../../services/accountService";
 import { fetchDeviceById } from "../../services/deviceService";
+import DropdownButton from "../../components/ui/buttons/DropdownButton";
 
 const AccountDeviceDetails = () => {
   const { id } = useParams();
@@ -39,6 +44,7 @@ const AccountDeviceDetails = () => {
     title: "",
   });
 
+  console.log("Account device details", accountDeviceDetails);
   const [tabIndex, setTabIndex] = useState(0);
   const handleTabChange = (event, newValue) => setTabIndex(newValue);
 
@@ -110,6 +116,23 @@ const AccountDeviceDetails = () => {
     }
   };
 
+  const handleInitialize = async () => {
+    setLoading(true);
+    try {
+      const response = await initializeAccountDevice({
+        accountDeviceId: accountDeviceDetails.id,
+      });
+
+      if (response.success) {
+        await getAccountDeviceDetails();
+      }
+    } catch (error) {
+      console.log("Error", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   if (loading) {
     return (
       <Box
@@ -134,20 +157,38 @@ const AccountDeviceDetails = () => {
           title={`${accountDeviceDetails.accountName} - ${accountDeviceDetails.deviceName}`}
           subheader={"Account Devices"}
         >
-          <Button
-            variant="contained"
-            size="small"
-            sx={{ borderRadius: 1 }}
-            onClick={() => {
-              setAccountAction({
-                mode: "edit",
-                title: `Edit ${accountDeviceDetails.deviceName} for ${accountDeviceDetails.accountName}`,
-              });
-              setOpen(true);
-            }}
-          >
-            Edit
-          </Button>
+          <DropdownButton label="Actions">
+            <MenuItem
+              disabled={accountDeviceDetails?.pccCloudId !== null}
+              onClick={handleInitialize}
+            >
+              Initialize
+            </MenuItem>
+
+            <MenuItem
+              onClick={() => {
+                setAccountAction({
+                  mode: "edit",
+                  title: `Edit ${accountDeviceDetails.deviceName} for ${accountDeviceDetails.accountName}`,
+                });
+                setOpen(true);
+              }}
+            >
+              Edit
+            </MenuItem>
+
+            <MenuItem
+              onClick={() => {
+                console.log("Activation clicked");
+              }}
+            >
+              {accountDetails.isActive ? "Deactivate" : "Activate"}
+            </MenuItem>
+
+            <MenuItem onClick={() => console.log("Delete clicked")}>
+              Archive
+            </MenuItem>
+          </DropdownButton>
         </PageHeader>
         <Divider flexItem variant="fullWidth" />
         <Box
@@ -164,6 +205,13 @@ const AccountDeviceDetails = () => {
             {
               label: "Active",
               value: accountDeviceDetails.isActive ? "Yes" : "No",
+            },
+            {
+              label: "p-Chip Cloud Device ID",
+              value:
+                accountDeviceDetails.pccCloudId !== null
+                  ? accountDeviceDetails.pccCloudId
+                  : "Not Setup",
             },
           ].map(({ label, value }, index) => (
             <FlexFieldWithLabel key={index} label={label} value={value} />

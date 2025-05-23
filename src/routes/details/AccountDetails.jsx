@@ -3,12 +3,17 @@ import {
   Button,
   CircularProgress,
   Divider,
+  MenuItem,
   Paper,
   Typography,
 } from "@mui/material";
 import { useEffect, useState } from "react";
 import { createSearchParams, useNavigate, useParams } from "react-router";
-import { fetchAccountDetails } from "../../services/accountService";
+import {
+  fetchAccountDetails,
+  initializeAccount,
+  updateAccount,
+} from "../../services/accountService";
 import PageHeader from "../../components/layout/DetailPageHeader";
 import { Tabs, Tab } from "@mui/material";
 import { fetchAccountActivations } from "../../services/accountActivationService";
@@ -19,6 +24,7 @@ import RightDrawer from "../../components/RightDrawerComponent";
 import FlexComponent from "../../components/containers/FlexComponent";
 import FlexFieldWithLabel from "../../components/containers/FlexFieldWithLabel";
 import FlexLayout from "../../components/layout/FlexLayout";
+import DropdownButton from "../../components/ui/buttons/DropdownButton";
 
 const AccountDetails = () => {
   const { id } = useParams();
@@ -118,7 +124,42 @@ const AccountDetails = () => {
     }
   };
 
-  console.log("account devices", accountDevices);
+  const handleInitialize = async () => {
+    setLoading(true);
+    try {
+      const response = await initializeAccount({
+        accountId: accountDetails.id,
+      });
+
+      if (response.success) {
+        await getAccountDetails();
+      }
+    } catch (error) {
+      console.log("Error", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+  console.log("Account details", accountDetails);
+
+  const handleUpdateAccountActiveStatus = async () => {
+    setLoading(true);
+    try {
+      const response = await updateAccount({
+        id: accountDetails.id,
+        name: accountDetails.name,
+        isActive: accountDetails.isActive ? false : true,
+      });
+
+      if (response.success) {
+        await getAccountDetails();
+      }
+    } catch (error) {
+      console.log("Error", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -145,20 +186,38 @@ const AccountDetails = () => {
           subheader={"Account"}
           breadcrumbs={true}
         >
-          <Button
-            variant="contained"
-            size="small"
-            sx={{ borderRadius: 1 }}
-            onClick={() => {
-              setAccountAction({
-                mode: "edit",
-                title: `Edit ${accountDetails.name}`,
-              });
-              setOpen(true);
-            }}
-          >
-            Edit
-          </Button>
+          <DropdownButton label="Actions">
+            <MenuItem
+              disabled={accountDetails?.pccCloudId !== null}
+              onClick={handleInitialize}
+            >
+              Initialize
+            </MenuItem>
+
+            <MenuItem
+              onClick={() => {
+                setAccountAction({
+                  mode: "edit",
+                  title: `Edit ${accountDetails.name}`,
+                });
+                setOpen(true);
+              }}
+            >
+              Edit
+            </MenuItem>
+
+            <MenuItem
+              onClick={() => {
+                handleUpdateAccountActiveStatus();
+              }}
+            >
+              {accountDetails.isActive ? "Deactivate" : "Activate"}
+            </MenuItem>
+
+            <MenuItem onClick={() => console.log("Delete clicked")}>
+              Archive
+            </MenuItem>
+          </DropdownButton>
         </PageHeader>
         <Divider flexItem variant="fullWidth" />
         <Box
@@ -172,6 +231,13 @@ const AccountDetails = () => {
             { label: "ID", value: accountDetails.id },
             { label: "Name", value: accountDetails.name },
             { label: "Active", value: accountDetails.isActive ? "Yes" : "No" },
+            {
+              label: "p-Chip Cloud Account",
+              value:
+                accountDetails.pccCloudId !== null
+                  ? accountDetails.pccCloudId
+                  : "Not Setup",
+            },
           ].map(({ label, value }, index) => (
             <FlexFieldWithLabel key={index} label={label} value={value} />
           ))}

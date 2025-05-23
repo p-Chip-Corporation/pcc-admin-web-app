@@ -26,7 +26,26 @@ export const createAccount = async (account) => {
   }
 };
 
+export const initializeAccount = async ({ accountId }) => {
+  try {
+    const response = await api.put(`/api/accounts/initialize/${accountId}`);
+
+    if (response.status === 200 || response.status === 201) {
+      return {
+        success: true,
+        data: response.data, // Include the response data (e.g., user profile)
+      };
+    }
+  } catch (error) {
+    return {
+      success: false,
+      error: error.response?.data?.error || error.message,
+    };
+  }
+};
+
 export const updateAccount = async (account) => {
+  console.log("Account", account.id);
   try {
     const response = await api.put(`/api/accounts/${account.id}`, {
       name: account.name,

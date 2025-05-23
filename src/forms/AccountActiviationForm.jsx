@@ -16,11 +16,12 @@ import { createAccountActivation } from "../services/accountActivationService";
 
 const validationSchema = Yup.object({
   accountId: Yup.string().required("Account is required"),
+  name: Yup.string().required("Name is required"),
   email: Yup.string().email("Invalid email").required("Email is required"),
   expiryDate: Yup.date().optional(),
 });
 
-export default function AccountActivationForm({ onSuccess }) {
+export default function AccountActivationForm({ initialValues, onSuccess }) {
   const [accounts, setAccounts] = useState([]);
   const [loadingAccounts, setLoadingAccounts] = useState(true);
 
@@ -43,11 +44,13 @@ export default function AccountActivationForm({ onSuccess }) {
 
   const formik = useFormik({
     initialValues: {
-      accountId: "",
-      email: "",
-      expiryDate: formatDatetimeLocal(
-        new Date(Date.now() + 24 * 60 * 60 * 1000)
-      ),
+      id: initialValues?.id || "",
+      accountId: initialValues?.accountId || "",
+      name: initialValues?.name || "",
+      email: initialValues?.email || "",
+      expiryDate: initialValues?.expiryDate
+        ? formatDatetimeLocal(new Date(initialValues.expiryDate))
+        : formatDatetimeLocal(new Date(Date.now() + 24 * 60 * 60 * 1000)),
     },
     validationSchema,
     onSubmit: async (values, { setStatus, setSubmitting }) => {
@@ -97,6 +100,15 @@ export default function AccountActivationForm({ onSuccess }) {
           onChange={formik.handleChange}
           error={formik.touched.email && Boolean(formik.errors.email)}
           helperText={formik.touched.email && formik.errors.email}
+          fullWidth
+        />
+        <TextField
+          name="name"
+          label="Name"
+          value={formik.values.name}
+          onChange={formik.handleChange}
+          error={formik.touched.name && Boolean(formik.errors.name)}
+          helperText={formik.touched.name && formik.errors.name}
           fullWidth
         />
 

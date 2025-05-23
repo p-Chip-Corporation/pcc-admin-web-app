@@ -7,7 +7,6 @@ import {
   TableRow,
   TablePagination,
   TableSortLabel,
-  Paper,
   Box,
   Typography,
   useMediaQuery,
